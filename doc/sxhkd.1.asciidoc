@@ -30,6 +30,9 @@ Options
 *-v*::
     Print the version information to standard output and exit.
 
+*-R*::
+    Print a readiness notification to file descriptor 3.
+
 *-m* _COUNT_::
     Handle the first _COUNT_ mapping notify events.
 

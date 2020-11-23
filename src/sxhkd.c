@@ -64,6 +64,8 @@ int main(int argc, char *argv[])
 {
 	int opt;
 	char *fifo_path = NULL;
+	bool readiness = false;
+	int readiness_fd = 3;
 	status_fifo = NULL;
 	config_path = NULL;
 	mapping_count = 0;
@@ -72,14 +74,17 @@ int main(int argc, char *argv[])
 	redir_fd = -1;
 	abort_keysym = ESCAPE_KEYSYM;
 
-	while ((opt = getopt(argc, argv, "hvm:t:c:r:s:a:")) != -1) {
+	while ((opt = getopt(argc, argv, "Rhvm:t:c:r:s:a:")) != -1) {
 		switch (opt) {
+			case 'R':
+				readiness = true;
+				break;
 			case 'v':
 				printf("%s\n", VERSION);
 				exit(EXIT_SUCCESS);
 				break;
 			case 'h':
-				printf("sxhkd [-h|-v|-m COUNT|-t TIMEOUT|-c CONFIG_FILE|-r REDIR_FILE|-s STATUS_FIFO|-a ABORT_KEYSYM] [EXTRA_CONFIG ...]\n");
+				printf("sxhkd [-h|-v|-R|-m COUNT|-t TIMEOUT|-c CONFIG_FILE|-r REDIR_FILE|-s STATUS_FIFO|-a ABORT_KEYSYM] [EXTRA_CONFIG ...]\n");
 				exit(EXIT_SUCCESS);
 				break;
 			case 'm':
@@ -155,6 +160,13 @@ int main(int argc, char *argv[])
 	running = true;
 
 	xcb_flush(dpy);
+
+	if (readiness) {
+		if (fcntl(readiness_fd, F_GETFD) < 0)
+			warn("Failed to open the readiness file descriptor.\n");
+		write(readiness_fd, "\n", 1);
+		close(readiness_fd);
+	}
 
 	while (running) {
 		FD_ZERO(&descriptors);
